@@ -23,11 +23,34 @@ export function BookForm({ onCreate }: BookFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const currentYear = new Date().getFullYear();
+    const trimmedForm = {
+      title: form.title.trim(),
+      author: form.author.trim(),
+      category: form.category.trim(),
+      publishedYear: form.publishedYear?.trim() ?? ""
+    };
+
+    if (!trimmedForm.title || !trimmedForm.author || !trimmedForm.category) {
+      setError("กรุณากรอกชื่อหนังสือ ผู้แต่ง และหมวดหมู่ให้ครบ");
+      return;
+    }
+
+    if (
+      trimmedForm.publishedYear &&
+      (!Number.isInteger(Number(trimmedForm.publishedYear)) ||
+        Number(trimmedForm.publishedYear) < 0 ||
+        Number(trimmedForm.publishedYear) > currentYear)
+    ) {
+      setError(`ปีที่พิมพ์ต้องเป็นเลขจำนวนเต็มตั้งแต่ 0 ถึง ${currentYear}`);
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     try {
-      await onCreate(form);
+      await onCreate(trimmedForm);
       setForm(initialForm);
       titleInputRef.current?.focus();
     } catch (requestError) {
@@ -42,7 +65,11 @@ export function BookForm({ onCreate }: BookFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-b border-neutral-200 pb-6">
+    <form
+      noValidate
+      onSubmit={handleSubmit}
+      className="border-b border-neutral-200 pb-6"
+    >
       <div className="grid gap-4 md:grid-cols-2">
         <label className="text-sm font-medium text-neutral-700">
           ชื่อหนังสือ
@@ -53,7 +80,7 @@ export function BookForm({ onCreate }: BookFormProps) {
               setForm((current) => ({ ...current, title: event.target.value }))
             }
             className="mt-2 w-full rounded-md border border-neutral-300 bg-white px-3 py-3 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
-            required
+            aria-invalid={Boolean(error && !form.title.trim())}
           />
         </label>
 
@@ -65,7 +92,7 @@ export function BookForm({ onCreate }: BookFormProps) {
               setForm((current) => ({ ...current, author: event.target.value }))
             }
             className="mt-2 w-full rounded-md border border-neutral-300 bg-white px-3 py-3 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
-            required
+            aria-invalid={Boolean(error && !form.author.trim())}
           />
         </label>
 
@@ -77,7 +104,7 @@ export function BookForm({ onCreate }: BookFormProps) {
               setForm((current) => ({ ...current, category: event.target.value }))
             }
             className="mt-2 w-full rounded-md border border-neutral-300 bg-white px-3 py-3 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
-            required
+            aria-invalid={Boolean(error && !form.category.trim())}
           />
         </label>
 
@@ -98,7 +125,11 @@ export function BookForm({ onCreate }: BookFormProps) {
         </label>
       </div>
 
-      {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
+      {error ? (
+        <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
 
       <button
         type="submit"

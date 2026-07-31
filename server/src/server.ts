@@ -31,8 +31,12 @@ app.use(
     res: express.Response,
     _next: express.NextFunction
   ) => {
+    if (error instanceof SyntaxError && "body" in error) {
+      return res.status(400).json({ error: "Invalid JSON request body" });
+    }
+
     console.error(error);
-    res.status(500).json({ error: "Unexpected server error" });
+    return res.status(500).json({ error: "Unexpected server error" });
   }
 );
 
@@ -50,4 +54,3 @@ startServer().catch(async (error) => {
   await prisma.$disconnect();
   process.exit(1);
 });
-

@@ -19,7 +19,11 @@ export interface BookInput {
   publishedYear?: string;
 }
 
-async function request<T>(path: string, init: RequestInit = {}) {
+async function request<T>(
+  path: string,
+  init: RequestInit = {},
+  options: { redirectOnUnauthorized?: boolean } = {}
+) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
@@ -28,7 +32,7 @@ async function request<T>(path: string, init: RequestInit = {}) {
     }
   });
 
-  if (response.status === 401) {
+  if (response.status === 401 && options.redirectOnUnauthorized) {
     clearToken();
     redirectToLogin();
     throw new Error("Unauthorized");
@@ -68,16 +72,24 @@ export async function fetchBooks() {
 }
 
 export async function createBook(input: BookInput) {
-  return request<{ book: Book }>("/api/books", {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(input)
-  });
+  return request<{ book: Book }>(
+    "/api/books",
+    {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(input)
+    },
+    { redirectOnUnauthorized: true }
+  );
 }
 
 export async function deleteBook(id: string) {
-  return request<void>(`/api/books/${id}`, {
-    method: "DELETE",
-    headers: authHeaders()
-  });
+  return request<void>(
+    `/api/books/${id}`,
+    {
+      method: "DELETE",
+      headers: authHeaders()
+    },
+    { redirectOnUnauthorized: true }
+  );
 }

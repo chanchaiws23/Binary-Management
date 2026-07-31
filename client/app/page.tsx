@@ -150,7 +150,11 @@ export default function HomePage() {
               ) : null}
             </div>
 
-            {error ? <p className="py-4 text-sm text-red-700">{error}</p> : null}
+            {error ? (
+              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </p>
+            ) : null}
 
             {!loading && !error ? (
               <BookList books={books} onDelete={handleDeleteBook} />

@@ -16,11 +16,19 @@ export function Login() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedUsername || !trimmedPassword) {
+      setError("กรุณากรอก username และ password");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     try {
-      const { token } = await login(username, password);
+      const { token } = await login(trimmedUsername, trimmedPassword);
       setToken(token);
       router.replace("/");
     } catch (requestError) {
@@ -51,6 +59,7 @@ export function Login() {
           </div>
 
           <form
+            noValidate
             onSubmit={handleSubmit}
             className="rounded-lg border border-neutral-200 bg-white/90 p-6 shadow-sm"
           >
@@ -72,6 +81,7 @@ export function Login() {
                 onChange={(event) => setUsername(event.target.value)}
                 className="mt-2 w-full rounded-md border border-neutral-300 bg-white px-3 py-3 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
                 autoComplete="username"
+                aria-invalid={Boolean(error && !username.trim())}
               />
             </label>
 
@@ -83,6 +93,7 @@ export function Login() {
                 type="password"
                 className="mt-2 w-full rounded-md border border-neutral-300 bg-white px-3 py-3 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
                 autoComplete="current-password"
+                aria-invalid={Boolean(error && !password.trim())}
               />
             </label>
 

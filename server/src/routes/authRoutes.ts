@@ -2,28 +2,35 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { prisma } from "../config/db.js";
+import { readRequiredString } from "../utils/validation.js";
 
 export const authRouter = Router();
 
 authRouter.post("/login", async (req, res) => {
-  const { username, password } = req.body as {
-    username?: string;
-    password?: string;
-  };
+  const { username, password } = req.body as Record<string, unknown>;
+  const parsedUsername = readRequiredString(username, "Username", 50);
+  const parsedPassword = readRequiredString(password, "Password", 100);
 
-  if (!username || !password) {
-    return res.status(400).json({ error: "Username and password are required" });
+  if ("error" in parsedUsername) {
+    return res.status(400).json({ error: parsedUsername.error });
+  }
+
+  if ("error" in parsedPassword) {
+    return res.status(400).json({ error: parsedPassword.error });
   }
 
   const user = await prisma.user.findUnique({
-    where: { username }
+    where: { username: parsedUsername.value }
   });
 
   if (!user) {
     return res.status(401).json({ error: "Invalid username or password" });
   }
 
-  const passwordMatches = await bcrypt.compare(password, user.password);
+  const passwordMatches = await bcrypt.compare(
+    parsedPassword.value,
+    user.password
+  );
 
   if (!passwordMatches) {
     return res.status(401).json({ error: "Invalid username or password" });
