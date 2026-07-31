@@ -1,0 +1,16 @@
+meta {
+  name: Delete Book
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/books/{{bookId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
