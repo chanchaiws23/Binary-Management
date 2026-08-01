@@ -3,7 +3,7 @@
 import { FormEvent, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import type { BookInput } from "../lib/api";
-import { showErrorToast } from "../lib/sweetAlert";
+import { showErrorAlert } from "../lib/sweetAlert";
 
 interface BookFormProps {
   onCreate: (input: BookInput) => Promise<void>;
@@ -22,9 +22,9 @@ export function BookForm({ onCreate }: BookFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  function setFormError(message: string) {
+  async function setFormError(message: string) {
     setError(message);
-    void showErrorToast(message);
+    await showErrorAlert("ข้อมูลหนังสือไม่ถูกต้อง", message);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -37,8 +37,19 @@ export function BookForm({ onCreate }: BookFormProps) {
       publishedYear: form.publishedYear?.trim() ?? ""
     };
 
-    if (!trimmedForm.title || !trimmedForm.author || !trimmedForm.category) {
-      setFormError("กรุณากรอกชื่อหนังสือ ผู้แต่ง และหมวดหมู่ให้ครบ");
+    if (!trimmedForm.title) {
+      await setFormError("กรุณากรอกชื่อหนังสือ");
+      titleInputRef.current?.focus();
+      return;
+    }
+
+    if (!trimmedForm.author) {
+      await setFormError("กรุณากรอกชื่อผู้แต่ง");
+      return;
+    }
+
+    if (!trimmedForm.category) {
+      await setFormError("กรุณากรอกหมวดหมู่");
       return;
     }
 
@@ -48,7 +59,7 @@ export function BookForm({ onCreate }: BookFormProps) {
         Number(trimmedForm.publishedYear) < 0 ||
         Number(trimmedForm.publishedYear) > currentYear)
     ) {
-      setFormError(`ปีที่พิมพ์ต้องเป็นเลขจำนวนเต็มตั้งแต่ 0 ถึง ${currentYear}`);
+      await setFormError(`ปีที่พิมพ์ต้องเป็นเลขจำนวนเต็มตั้งแต่ 0 ถึง ${currentYear}`);
       return;
     }
 
@@ -60,7 +71,7 @@ export function BookForm({ onCreate }: BookFormProps) {
       setForm(initialForm);
       titleInputRef.current?.focus();
     } catch (requestError) {
-      setFormError(
+      await setFormError(
         requestError instanceof Error
           ? requestError.message
           : "ไม่สามารถเพิ่มหนังสือได้"

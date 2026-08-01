@@ -1,30 +1,32 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogIn } from "lucide-react";
 import { login } from "../lib/api";
 import { setToken } from "../lib/auth";
-import { showErrorToast } from "../lib/sweetAlert";
+import { showErrorAlert, showSuccessAlert } from "../lib/sweetAlert";
 
 export function Login() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialMessage = searchParams.get("message") ?? "";
+  const initialMessageShownRef = useRef(false);
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("password123");
   const [error, setError] = useState(initialMessage);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (initialMessage) {
-      void showErrorToast(initialMessage);
+    if (initialMessage && !initialMessageShownRef.current) {
+      initialMessageShownRef.current = true;
+      void showErrorAlert("ต้องเข้าสู่ระบบก่อน", initialMessage);
     }
   }, [initialMessage]);
 
-  function setLoginError(message: string) {
+  async function setLoginError(message: string) {
     setError(message);
-    void showErrorToast(message);
+    await showErrorAlert("เข้าสู่ระบบไม่สำเร็จ", message);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -32,8 +34,13 @@ export function Login() {
     const trimmedUsername = username.trim();
     const trimmedPassword = password.trim();
 
-    if (!trimmedUsername || !trimmedPassword) {
-      setLoginError("กรุณากรอก username และ password");
+    if (!trimmedUsername) {
+      await setLoginError("กรุณากรอก username");
+      return;
+    }
+
+    if (!trimmedPassword) {
+      await setLoginError("กรุณากรอก password");
       return;
     }
 
@@ -43,9 +50,10 @@ export function Login() {
     try {
       const { token } = await login(trimmedUsername, trimmedPassword);
       setToken(token);
+      await showSuccessAlert("เข้าสู่ระบบสำเร็จ", "กำลังเข้าสู่คลังหนังสือ");
       router.replace("/");
     } catch (requestError) {
-      setLoginError(
+      await setLoginError(
         requestError instanceof Error
           ? requestError.message
           : "ไม่สามารถเข้าสู่ระบบได้"

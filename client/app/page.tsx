@@ -13,7 +13,12 @@ import {
   fetchBooks
 } from "../lib/api";
 import { clearToken, getToken } from "../lib/auth";
-import { showErrorToast, showToast } from "../lib/sweetAlert";
+import {
+  showErrorAlert,
+  showInfoAlert,
+  showSuccessAlert,
+  showToast
+} from "../lib/sweetAlert";
 
 export default function HomePage() {
   const router = useRouter();
@@ -27,13 +32,17 @@ export default function HomePage() {
     [books]
   );
 
-  async function loadBooks() {
+  async function loadBooks(showSuccess = false) {
     setLoading(true);
     setError("");
 
     try {
       const payload = await fetchBooks();
       setBooks(payload.books);
+
+      if (showSuccess) {
+        void showToast("โหลดรายการหนังสือเรียบร้อยแล้ว");
+      }
     } catch (requestError) {
       const message =
         requestError instanceof Error
@@ -41,7 +50,7 @@ export default function HomePage() {
           : "ไม่สามารถโหลดรายการหนังสือได้";
 
       setError(message);
-      void showErrorToast(message);
+      await showErrorAlert("โหลดข้อมูลไม่สำเร็จ", message);
     } finally {
       setLoading(false);
     }
@@ -61,16 +70,17 @@ export default function HomePage() {
   async function handleCreateBook(input: BookInput) {
     const payload = await createBook(input);
     setBooks((current) => [payload.book, ...current]);
-    void showToast("เพิ่มหนังสือเรียบร้อยแล้วนะ!");
+    await showSuccessAlert("เพิ่มหนังสือสำเร็จ", "หนังสือถูกบันทึกเข้าคลังแล้ว");
   }
 
   async function handleDeleteBook(id: string) {
     try {
       await deleteBook(id);
       setBooks((current) => current.filter((book) => book.id !== id));
-      void showToast("ลบหนังสือเรียบร้อยแล้วนะ!");
+      await showSuccessAlert("ลบหนังสือสำเร็จ", "นำหนังสือออกจากคลังแล้ว");
     } catch (requestError) {
-      void showErrorToast(
+      await showErrorAlert(
+        "ลบหนังสือไม่สำเร็จ",
         requestError instanceof Error
           ? requestError.message
           : "ไม่สามารถลบหนังสือได้"
@@ -78,8 +88,9 @@ export default function HomePage() {
     }
   }
 
-  function handleLogout() {
+  async function handleLogout() {
     clearToken();
+    await showInfoAlert("ออกจากระบบแล้ว");
     router.replace("/login");
   }
 
@@ -102,7 +113,7 @@ export default function HomePage() {
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => void loadBooks()}
+              onClick={() => void loadBooks(true)}
               className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-4 py-3 font-semibold transition hover:bg-neutral-50"
             >
               <RefreshCw size={18} aria-hidden />
@@ -110,7 +121,7 @@ export default function HomePage() {
             </button>
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={() => void handleLogout()}
               className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-3 font-semibold text-white transition hover:bg-accent/90"
             >
               <LogOut size={18} aria-hidden />
@@ -158,4 +169,3 @@ export default function HomePage() {
     </main>
   );
 }
-

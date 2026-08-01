@@ -34,7 +34,7 @@ export function BookList({ books, onDelete }: BookListProps) {
 
           <button
             type="button"
-            onClick={() => onDelete(book.id)}
+            onClick={() => void onDelete(book.id)}
             className="inline-flex w-fit items-center gap-2 rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
             aria-label={`ลบ ${book.title}`}
           >

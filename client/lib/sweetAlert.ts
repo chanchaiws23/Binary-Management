@@ -22,3 +22,43 @@ export function showErrorToast(title: string) {
   return showToast(title, "error");
 }
 
+export function showSuccessAlert(title: string, text?: string) {
+  return Swal.fire({
+    icon: "success",
+    title,
+    text,
+    timer: 1100,
+    timerProgressBar: true,
+    showConfirmButton: false,
+    customClass: {
+      popup: "rounded-lg"
+    }
+  });
+}
+
+export function showErrorAlert(title: string, text?: string) {
+  return Swal.fire({
+    icon: "error",
+    title,
+    text,
+    confirmButtonText: "ตกลง",
+    confirmButtonColor: "#1f7a5c",
+    customClass: {
+      popup: "rounded-lg"
+    }
+  });
+}
+
+export function showInfoAlert(title: string, text?: string) {
+  return Swal.fire({
+    icon: "info",
+    title,
+    text,
+    timer: 900,
+    timerProgressBar: true,
+    showConfirmButton: false,
+    customClass: {
+      popup: "rounded-lg"
+    }
+  });
+}
