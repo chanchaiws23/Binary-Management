@@ -1,18 +1,31 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogIn } from "lucide-react";
 import { login } from "../lib/api";
 import { setToken } from "../lib/auth";
+import { showErrorToast } from "../lib/sweetAlert";
 
 export function Login() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const initialMessage = searchParams.get("message") ?? "";
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("password123");
-  const [error, setError] = useState(searchParams.get("message") ?? "");
+  const [error, setError] = useState(initialMessage);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (initialMessage) {
+      void showErrorToast(initialMessage);
+    }
+  }, [initialMessage]);
+
+  function setLoginError(message: string) {
+    setError(message);
+    void showErrorToast(message);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,7 +33,7 @@ export function Login() {
     const trimmedPassword = password.trim();
 
     if (!trimmedUsername || !trimmedPassword) {
-      setError("กรุณากรอก username และ password");
+      setLoginError("กรุณากรอก username และ password");
       return;
     }
 
@@ -32,7 +45,7 @@ export function Login() {
       setToken(token);
       router.replace("/");
     } catch (requestError) {
-      setError(
+      setLoginError(
         requestError instanceof Error
           ? requestError.message
           : "ไม่สามารถเข้าสู่ระบบได้"

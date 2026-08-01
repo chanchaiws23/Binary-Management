@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { LogOut, RefreshCw } from "lucide-react";
 import { BookForm } from "../components/BookForm";
 import { BookList } from "../components/BookList";
-import { Toast, type ToastType } from "../components/Toast";
 import {
   Book,
   BookInput,
@@ -14,32 +13,19 @@ import {
   fetchBooks
 } from "../lib/api";
 import { clearToken, getToken } from "../lib/auth";
-
-interface ToastState {
-  message: string;
-  type: ToastType;
-}
+import { showErrorToast, showToast } from "../lib/sweetAlert";
 
 export default function HomePage() {
   const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [toast, setToast] = useState<ToastState | null>(null);
 
   const totalBooks = useMemo(() => books.length, [books]);
   const categories = useMemo(
     () => Array.from(new Set(books.map((book) => book.category))).sort(),
     [books]
   );
-
-  function showToast(message: string, type: ToastType = "success") {
-    setToast({ message, type });
-  }
-
-  function dismissToast() {
-    setToast(null);
-  }
 
   async function loadBooks() {
     setLoading(true);
@@ -55,7 +41,7 @@ export default function HomePage() {
           : "ไม่สามารถโหลดรายการหนังสือได้";
 
       setError(message);
-      showToast(message, "error");
+      void showErrorToast(message);
     } finally {
       setLoading(false);
     }
@@ -75,20 +61,19 @@ export default function HomePage() {
   async function handleCreateBook(input: BookInput) {
     const payload = await createBook(input);
     setBooks((current) => [payload.book, ...current]);
-    showToast("เพิ่มหนังสือเรียบร้อยแล้วนะ!");
+    void showToast("เพิ่มหนังสือเรียบร้อยแล้วนะ!");
   }
 
   async function handleDeleteBook(id: string) {
     try {
       await deleteBook(id);
       setBooks((current) => current.filter((book) => book.id !== id));
-      showToast("ลบหนังสือเรียบร้อยแล้วนะ!");
+      void showToast("ลบหนังสือเรียบร้อยแล้วนะ!");
     } catch (requestError) {
-      showToast(
+      void showErrorToast(
         requestError instanceof Error
           ? requestError.message
-          : "ไม่สามารถลบหนังสือได้",
-        "error"
+          : "ไม่สามารถลบหนังสือได้"
       );
     }
   }
@@ -170,14 +155,6 @@ export default function HomePage() {
           </div>
         </section>
       </div>
-
-      {toast ? (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onDismiss={dismissToast}
-        />
-      ) : null}
     </main>
   );
 }

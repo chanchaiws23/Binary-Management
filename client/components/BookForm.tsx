@@ -3,6 +3,7 @@
 import { FormEvent, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import type { BookInput } from "../lib/api";
+import { showErrorToast } from "../lib/sweetAlert";
 
 interface BookFormProps {
   onCreate: (input: BookInput) => Promise<void>;
@@ -21,6 +22,11 @@ export function BookForm({ onCreate }: BookFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  function setFormError(message: string) {
+    setError(message);
+    void showErrorToast(message);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const currentYear = new Date().getFullYear();
@@ -32,7 +38,7 @@ export function BookForm({ onCreate }: BookFormProps) {
     };
 
     if (!trimmedForm.title || !trimmedForm.author || !trimmedForm.category) {
-      setError("กรุณากรอกชื่อหนังสือ ผู้แต่ง และหมวดหมู่ให้ครบ");
+      setFormError("กรุณากรอกชื่อหนังสือ ผู้แต่ง และหมวดหมู่ให้ครบ");
       return;
     }
 
@@ -42,7 +48,7 @@ export function BookForm({ onCreate }: BookFormProps) {
         Number(trimmedForm.publishedYear) < 0 ||
         Number(trimmedForm.publishedYear) > currentYear)
     ) {
-      setError(`ปีที่พิมพ์ต้องเป็นเลขจำนวนเต็มตั้งแต่ 0 ถึง ${currentYear}`);
+      setFormError(`ปีที่พิมพ์ต้องเป็นเลขจำนวนเต็มตั้งแต่ 0 ถึง ${currentYear}`);
       return;
     }
 
@@ -54,7 +60,7 @@ export function BookForm({ onCreate }: BookFormProps) {
       setForm(initialForm);
       titleInputRef.current?.focus();
     } catch (requestError) {
-      setError(
+      setFormError(
         requestError instanceof Error
           ? requestError.message
           : "ไม่สามารถเพิ่มหนังสือได้"
