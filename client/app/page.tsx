@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, RefreshCw } from "lucide-react";
 import { BookForm } from "../components/BookForm";
 import { BookList } from "../components/BookList";
+import { Toast, type ToastType } from "../components/Toast";
 import {
   Book,
   BookInput,
@@ -14,19 +15,31 @@ import {
 } from "../lib/api";
 import { clearToken, getToken } from "../lib/auth";
 
+interface ToastState {
+  message: string;
+  type: ToastType;
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [actionMessage, setActionMessage] = useState("");
-  const previousBookCount = useRef<number | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   const totalBooks = useMemo(() => books.length, [books]);
   const categories = useMemo(
     () => Array.from(new Set(books.map((book) => book.category))).sort(),
     [books]
   );
+
+  function showToast(message: string, type: ToastType = "success") {
+    setToast({ message, type });
+  }
+
+  function dismissToast() {
+    setToast(null);
+  }
 
   async function loadBooks() {
     setLoading(true);
@@ -36,11 +49,13 @@ export default function HomePage() {
       const payload = await fetchBooks();
       setBooks(payload.books);
     } catch (requestError) {
-      setError(
+      const message =
         requestError instanceof Error
           ? requestError.message
-          : "ไม่สามารถโหลดรายการหนังสือได้"
-      );
+          : "ไม่สามารถโหลดรายการหนังสือได้";
+
+      setError(message);
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }
@@ -57,32 +72,25 @@ export default function HomePage() {
     void loadBooks();
   }, [router]);
 
-  useEffect(() => {
-    if (previousBookCount.current === null) {
-      previousBookCount.current = books.length;
-      return;
-    }
-
-    if (!actionMessage || previousBookCount.current === books.length) {
-      previousBookCount.current = books.length;
-      return;
-    }
-
-    window.alert(actionMessage);
-    previousBookCount.current = books.length;
-    setActionMessage("");
-  }, [actionMessage, books]);
-
   async function handleCreateBook(input: BookInput) {
     const payload = await createBook(input);
-    setActionMessage("เพิ่มหนังสือเรียบร้อยแล้วนะ!");
     setBooks((current) => [payload.book, ...current]);
+    showToast("เพิ่มหนังสือเรียบร้อยแล้วนะ!");
   }
 
   async function handleDeleteBook(id: string) {
-    await deleteBook(id);
-    setActionMessage("ลบหนังสือเรียบร้อยแล้วนะ!");
-    setBooks((current) => current.filter((book) => book.id !== id));
+    try {
+      await deleteBook(id);
+      setBooks((current) => current.filter((book) => book.id !== id));
+      showToast("ลบหนังสือเรียบร้อยแล้วนะ!");
+    } catch (requestError) {
+      showToast(
+        requestError instanceof Error
+          ? requestError.message
+          : "ไม่สามารถลบหนังสือได้",
+        "error"
+      );
+    }
   }
 
   function handleLogout() {
@@ -162,6 +170,14 @@ export default function HomePage() {
           </div>
         </section>
       </div>
+
+      {toast ? (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onDismiss={dismissToast}
+        />
+      ) : null}
     </main>
   );
 }
