@@ -36,6 +36,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const bookChangeRef = useRef<"added" | "deleted" | null>(null);
+  const authRedirectingRef = useRef(false);
 
   const totalBooks = useMemo(() => books.length, [books]);
   const categories = useMemo(
@@ -96,14 +97,45 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    if (!getToken()) {
+    function ensureAuthenticated() {
+      if (getToken()) {
+        return true;
+      }
+
+      if (authRedirectingRef.current) {
+        return false;
+      }
+
+      authRedirectingRef.current = true;
       router.replace(
         `/login?message=${encodeURIComponent("กรุณาเข้าสู่ระบบก่อนใช้งาน")}`
       );
+      return false;
+    }
+
+    if (!ensureAuthenticated()) {
       return;
     }
 
     void loadBooks();
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        ensureAuthenticated();
+      }
+    }
+
+    window.addEventListener("storage", ensureAuthenticated);
+    window.addEventListener("focus", ensureAuthenticated);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    const tokenCheckInterval = window.setInterval(ensureAuthenticated, 1000);
+
+    return () => {
+      window.removeEventListener("storage", ensureAuthenticated);
+      window.removeEventListener("focus", ensureAuthenticated);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.clearInterval(tokenCheckInterval);
+    };
   }, [router]);
 
   useEffect(() => {
@@ -165,6 +197,7 @@ export default function HomePage() {
   }
 
   async function handleLogout() {
+    authRedirectingRef.current = true;
     clearToken();
     await showInfoAlert("ออกจากระบบแล้ว");
     router.replace("/login");
