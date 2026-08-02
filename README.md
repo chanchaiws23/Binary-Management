@@ -78,4 +78,9 @@ npm run dev --workspace client
 - `POST /api/books` ต้องส่ง `Authorization: Bearer <token>`
 - `DELETE /api/books/:id` ต้องส่ง `Authorization: Bearer <token>`
 
-ไฟล์ Bruno สำหรับทดสอบอยู่ใน `api-collection/`
+ไฟล์ Bruno สำหรับทดสอบอยู่ใน `api-collection/` ให้เลือก environment `Local` และรันตามลำดับ:
+
+1. `Login` บันทึก JWT ลงตัวแปร `token` อัตโนมัติ
+2. `Get Books` โหลดรายการหนังสือทั้งหมด
+3. `Create Book` เพิ่มหนังสือและบันทึก ID ลงตัวแปร `bookId` อัตโนมัติ
+4. `Delete Book` ลบหนังสือที่เพิ่งสร้างด้วย `bookId`
