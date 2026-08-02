@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, RefreshCw, Search } from "lucide-react";
+import {
+  ChevronDown,
+  ListFilter,
+  LogOut,
+  RefreshCw,
+  Search
+} from "lucide-react";
 import { BookForm } from "../components/BookForm";
 import { BookList } from "../components/BookList";
 import {
@@ -28,6 +34,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const bookChangeRef = useRef<"added" | "deleted" | null>(null);
 
   const totalBooks = useMemo(() => books.length, [books]);
@@ -38,18 +45,31 @@ export default function HomePage() {
   const filteredBooks = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
 
-    if (!normalizedQuery) {
-      return books;
-    }
+    return books.filter((book) => {
+      const matchesCategory =
+        !selectedCategory || book.category === selectedCategory;
+      const matchesQuery =
+        !normalizedQuery ||
+        [book.title, book.author, book.category, book.publishedYear]
+          .filter((value) => value !== null)
+          .some((value) =>
+            String(value).toLocaleLowerCase().includes(normalizedQuery)
+          );
 
-    return books.filter((book) =>
-      [book.title, book.author, book.category, book.publishedYear]
-        .filter((value) => value !== null)
-        .some((value) =>
-          String(value).toLocaleLowerCase().includes(normalizedQuery)
-        )
-    );
-  }, [books, searchQuery]);
+      return matchesCategory && matchesQuery;
+    });
+  }, [books, searchQuery, selectedCategory]);
+
+  const categorySummary = useMemo(() => {
+    if (categories.length === 0) return "ยังไม่มีหมวดหมู่";
+
+    const visibleCategories = categories.slice(0, 3).join(", ");
+    const remainingCount = categories.length - 3;
+
+    return remainingCount > 0
+      ? `${visibleCategories} และอีก ${remainingCount} หมวด`
+      : visibleCategories;
+  }, [categories]);
 
   async function loadBooks(showSuccess = false) {
     setLoading(true);
@@ -105,6 +125,12 @@ export default function HomePage() {
 
     void showSuccessAlert("ลบหนังสือสำเร็จ", "นำหนังสือออกจากคลังแล้ว");
   }, [books]);
+
+  useEffect(() => {
+    if (selectedCategory && !categories.includes(selectedCategory)) {
+      setSelectedCategory("");
+    }
+  }, [categories, selectedCategory]);
 
   async function handleCreateBook(input: BookInput) {
     const payload = await createBook(input);
@@ -186,9 +212,10 @@ export default function HomePage() {
             <p className="mt-2 text-5xl font-semibold">{totalBooks}</p>
           </div>
           <div className="pb-5 md:pl-2">
-            <p className="text-sm text-neutral-600">หมวดหมู่</p>
-            <p className="mt-3 text-lg font-medium">
-              {categories.length ? categories.join(", ") : "ยังไม่มีหมวดหมู่"}
+            <p className="text-sm text-neutral-600">หมวดหมู่ทั้งหมด</p>
+            <p className="mt-2 text-5xl font-semibold">{categories.length}</p>
+            <p className="mt-2 text-sm text-neutral-600">
+              {categorySummary}
             </p>
           </div>
         </section>
@@ -200,28 +227,56 @@ export default function HomePage() {
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="text-2xl font-semibold">รายการหนังสือ</h2>
-                {!loading && searchQuery.trim() ? (
+                {!loading && (searchQuery.trim() || selectedCategory) ? (
                   <p className="mt-1 text-sm text-neutral-500">
                     พบ {filteredBooks.length} จาก {totalBooks} รายการ
                   </p>
                 ) : null}
               </div>
 
-              <label className="relative block w-full sm:max-w-sm">
-                <span className="sr-only">ค้นหาหนังสือ</span>
-                <Search
-                  size={18}
-                  aria-hidden
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
-                />
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="ค้นหาชื่อ ผู้แต่ง หมวดหมู่ หรือปี"
-                  className="w-full rounded-md border border-neutral-300 bg-white py-3 pl-10 pr-3 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
-                />
-              </label>
+              <div className="grid w-full gap-2 sm:max-w-2xl sm:grid-cols-[minmax(160px,0.7fr)_minmax(240px,1.3fr)]">
+                <label className="relative block">
+                  <span className="sr-only">กรองตามหมวดหมู่</span>
+                  <ListFilter
+                    size={18}
+                    aria-hidden
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+                  />
+                  <select
+                    value={selectedCategory}
+                    onChange={(event) => setSelectedCategory(event.target.value)}
+                    className="w-full appearance-none rounded-md border border-neutral-300 bg-white py-3 pl-10 pr-8 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+                  >
+                    <option value="">ทุกหมวดหมู่</option>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={16}
+                    aria-hidden
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500"
+                  />
+                </label>
+
+                <label className="relative block">
+                  <span className="sr-only">ค้นหาหนังสือ</span>
+                  <Search
+                    size={18}
+                    aria-hidden
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+                  />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="ค้นหาชื่อ ผู้แต่ง หมวดหมู่ หรือปี"
+                    className="w-full rounded-md border border-neutral-300 bg-white py-3 pl-10 pr-3 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+                  />
+                </label>
+              </div>
             </div>
 
             {loading ? (
@@ -235,7 +290,15 @@ export default function HomePage() {
             ) : null}
 
             {!loading && !error ? (
-              <BookList books={filteredBooks} onDelete={handleDeleteBook} />
+              <BookList
+                books={filteredBooks}
+                onDelete={handleDeleteBook}
+                emptyMessage={
+                  searchQuery.trim() || selectedCategory
+                    ? "ไม่พบหนังสือที่ตรงกับตัวกรอง"
+                    : undefined
+                }
+              />
             ) : null}
           </div>
         </section>

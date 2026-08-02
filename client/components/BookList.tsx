@@ -6,13 +6,14 @@ import type { Book } from "../lib/api";
 interface BookListProps {
   books: Book[];
   onDelete: (book: Book) => Promise<void>;
+  emptyMessage?: string;
 }
 
-export function BookList({ books, onDelete }: BookListProps) {
+export function BookList({ books, onDelete, emptyMessage }: BookListProps) {
   if (books.length === 0) {
     return (
       <div className="py-12 text-center text-neutral-600">
-        ยังไม่มีหนังสือในคลัง
+        {emptyMessage ?? "ยังไม่มีหนังสือในคลัง"}
       </div>
     );
   }
