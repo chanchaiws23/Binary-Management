@@ -45,8 +45,7 @@ async function startServer() {
   await prisma.$connect();
 
   app.listen(port, () => {
-    console.log("Book library server is up and ready to roll");
-    console.log(`Listening on http://localhost:${port}`);
+    console.log(`Personal Book Library API is ready at http://localhost:${port}`);
   });
 }
 
