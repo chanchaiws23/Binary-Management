@@ -17,13 +17,28 @@ npm install
 
 ## Environment Variables
 
-คัดลอกไฟล์ตัวอย่าง:
+คัดลอกไฟล์ตัวอย่างของ Backend:
 
 ```bash
 copy server\.env.example server\.env
 ```
 
 ค่าเริ่มต้นใน `server/.env.example` ใช้กับ `docker-compose.yml` ได้ทันที
+
+Frontend ใช้ `http://localhost:4000` เป็น API URL เริ่มต้น หากต้องการเปลี่ยน URL ให้คัดลอกไฟล์ตัวอย่าง:
+
+```bash
+copy client\.env.example client\.env.local
+```
+
+Environment variables ที่ใช้:
+
+- `DATABASE_URL`: PostgreSQL connection string
+- `JWT_SECRET`: Secret สำหรับลงนามและตรวจสอบ JWT
+- `JWT_EXPIRES_IN`: อายุของ JWT เช่น `1h`
+- `PORT`: พอร์ตของ Backend
+- `CLIENT_ORIGIN`: Origin ที่ CORS อนุญาต
+- `NEXT_PUBLIC_API_URL`: URL ของ Backend ที่ Frontend เรียกใช้งาน
 
 ## รัน Database และเตรียมข้อมูล
 
@@ -63,5 +78,9 @@ npm run dev --workspace client
 - `POST /api/books` ต้องส่ง `Authorization: Bearer <token>`
 - `DELETE /api/books/:id` ต้องส่ง `Authorization: Bearer <token>`
 
-ไฟล์ Bruno สำหรับทดสอบอยู่ใน `api-collection/`
+ไฟล์ Bruno สำหรับทดสอบอยู่ใน `api-collection/` ให้เลือก environment `Local` และรันตามลำดับ:
 
+1. `Login` บันทึก JWT ลงตัวแปร `token` อัตโนมัติ
+2. `Get Books` โหลดรายการหนังสือทั้งหมด
+3. `Create Book` เพิ่มหนังสือและบันทึก ID ลงตัวแปร `bookId` อัตโนมัติ
+4. `Delete Book` ลบหนังสือที่เพิ่งสร้างด้วย `bookId`

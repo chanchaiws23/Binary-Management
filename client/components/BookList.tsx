@@ -5,14 +5,15 @@ import type { Book } from "../lib/api";
 
 interface BookListProps {
   books: Book[];
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (book: Book) => Promise<void>;
+  emptyMessage?: string;
 }
 
-export function BookList({ books, onDelete }: BookListProps) {
+export function BookList({ books, onDelete, emptyMessage }: BookListProps) {
   if (books.length === 0) {
     return (
       <div className="py-12 text-center text-neutral-600">
-        ยังไม่มีหนังสือในคลัง
+        {emptyMessage ?? "ยังไม่มีหนังสือในคลัง"}
       </div>
     );
   }
@@ -34,7 +35,7 @@ export function BookList({ books, onDelete }: BookListProps) {
 
           <button
             type="button"
-            onClick={() => onDelete(book.id)}
+            onClick={() => void onDelete(book)}
             className="inline-flex w-fit items-center gap-2 rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
             aria-label={`ลบ ${book.title}`}
           >
@@ -46,4 +47,3 @@ export function BookList({ books, onDelete }: BookListProps) {
     </div>
   );
 }
-
