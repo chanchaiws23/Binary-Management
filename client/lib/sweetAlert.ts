@@ -62,3 +62,23 @@ export function showInfoAlert(title: string, text?: string) {
     }
   });
 }
+
+export async function showConfirmAlert(title: string, text?: string) {
+  const result = await Swal.fire({
+    icon: "warning",
+    title,
+    text,
+    showCancelButton: true,
+    confirmButtonText: "ลบหนังสือ",
+    cancelButtonText: "ยกเลิก",
+    confirmButtonColor: "#b91c1c",
+    cancelButtonColor: "#525252",
+    reverseButtons: true,
+    focusCancel: true,
+    customClass: {
+      popup: "rounded-lg"
+    }
+  });
+
+  return result.isConfirmed;
+}

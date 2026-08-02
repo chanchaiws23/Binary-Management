@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, RefreshCw, Search } from "lucide-react";
 import { BookForm } from "../components/BookForm";
@@ -14,6 +14,7 @@ import {
 } from "../lib/api";
 import { clearToken, getToken } from "../lib/auth";
 import {
+  showConfirmAlert,
   showErrorAlert,
   showInfoAlert,
   showSuccessAlert,
@@ -27,6 +28,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const bookChangeRef = useRef<"added" | "deleted" | null>(null);
 
   const totalBooks = useMemo(() => books.length, [books]);
   const categories = useMemo(
@@ -84,17 +86,48 @@ export default function HomePage() {
     void loadBooks();
   }, [router]);
 
+  useEffect(() => {
+    const change = bookChangeRef.current;
+
+    if (!change) {
+      return;
+    }
+
+    bookChangeRef.current = null;
+
+    if (change === "added") {
+      void showSuccessAlert(
+        "เพิ่มหนังสือสำเร็จ",
+        "หนังสือถูกบันทึกเข้าคลังแล้ว"
+      );
+      return;
+    }
+
+    void showSuccessAlert("ลบหนังสือสำเร็จ", "นำหนังสือออกจากคลังแล้ว");
+  }, [books]);
+
   async function handleCreateBook(input: BookInput) {
     const payload = await createBook(input);
+    bookChangeRef.current = "added";
     setBooks((current) => [payload.book, ...current]);
-    await showSuccessAlert("เพิ่มหนังสือสำเร็จ", "หนังสือถูกบันทึกเข้าคลังแล้ว");
   }
 
-  async function handleDeleteBook(id: string) {
+  async function handleDeleteBook(book: Book) {
+    const confirmed = await showConfirmAlert(
+      "ยืนยันการลบหนังสือ",
+      `ต้องการลบ “${book.title}” ออกจากคลังหรือไม่`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     try {
-      await deleteBook(id);
-      setBooks((current) => current.filter((book) => book.id !== id));
-      await showSuccessAlert("ลบหนังสือสำเร็จ", "นำหนังสือออกจากคลังแล้ว");
+      await deleteBook(book.id);
+      bookChangeRef.current = "deleted";
+      setBooks((current) =>
+        current.filter((currentBook) => currentBook.id !== book.id)
+      );
     } catch (requestError) {
       await showErrorAlert(
         "ลบหนังสือไม่สำเร็จ",
