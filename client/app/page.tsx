@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, RefreshCw } from "lucide-react";
+import { LogOut, RefreshCw, Search } from "lucide-react";
 import { BookForm } from "../components/BookForm";
 import { BookList } from "../components/BookList";
 import {
@@ -25,12 +25,28 @@ export default function HomePage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const totalBooks = useMemo(() => books.length, [books]);
   const categories = useMemo(
     () => Array.from(new Set(books.map((book) => book.category))).sort(),
     [books]
   );
+  const filteredBooks = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
+
+    if (!normalizedQuery) {
+      return books;
+    }
+
+    return books.filter((book) =>
+      [book.title, book.author, book.category, book.publishedYear]
+        .filter((value) => value !== null)
+        .some((value) =>
+          String(value).toLocaleLowerCase().includes(normalizedQuery)
+        )
+    );
+  }, [books, searchQuery]);
 
   async function loadBooks(showSuccess = false) {
     setLoading(true);
@@ -147,12 +163,36 @@ export default function HomePage() {
           <BookForm onCreate={handleCreateBook} />
 
           <div className="pt-6">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">รายการหนังสือ</h2>
-              {loading ? (
-                <span className="text-sm text-neutral-500">กำลังโหลด...</span>
-              ) : null}
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold">รายการหนังสือ</h2>
+                {!loading && searchQuery.trim() ? (
+                  <p className="mt-1 text-sm text-neutral-500">
+                    พบ {filteredBooks.length} จาก {totalBooks} รายการ
+                  </p>
+                ) : null}
+              </div>
+
+              <label className="relative block w-full sm:max-w-sm">
+                <span className="sr-only">ค้นหาหนังสือ</span>
+                <Search
+                  size={18}
+                  aria-hidden
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+                />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="ค้นหาชื่อ ผู้แต่ง หมวดหมู่ หรือปี"
+                  className="w-full rounded-md border border-neutral-300 bg-white py-3 pl-10 pr-3 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+                />
+              </label>
             </div>
+
+            {loading ? (
+              <p className="text-sm text-neutral-500">กำลังโหลด...</p>
+            ) : null}
 
             {error ? (
               <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -161,7 +201,7 @@ export default function HomePage() {
             ) : null}
 
             {!loading && !error ? (
-              <BookList books={books} onDelete={handleDeleteBook} />
+              <BookList books={filteredBooks} onDelete={handleDeleteBook} />
             ) : null}
           </div>
         </section>
