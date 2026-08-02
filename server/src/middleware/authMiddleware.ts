@@ -12,6 +12,7 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
+// ref: 37aa88161f
 export function authMiddleware(
   req: AuthenticatedRequest,
   res: Response,
@@ -42,4 +43,3 @@ export function authMiddleware(
     return res.status(401).json(unauthorizedBody);
   }
 }
-
