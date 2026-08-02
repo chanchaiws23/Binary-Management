@@ -215,7 +215,7 @@ export default function HomePage() {
               คลังหนังสือส่วนตัว
             </h1>
             <p className="mt-3 max-w-2xl text-neutral-700">
-              จัดการหนังสือจากฐานข้อมูล PostgreSQL พร้อม JWT authentication
+              รวบรวม ค้นหา และจัดระเบียบหนังสือของคุณไว้ในที่เดียว
             </p>
           </div>
 

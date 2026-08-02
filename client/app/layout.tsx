@@ -3,8 +3,8 @@ import "sweetalert2/dist/sweetalert2.min.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Personal Book Library",
-  description: "Manage a personal book library with JWT authentication"
+  title: "คลังหนังสือส่วนตัว",
+  description: "รวบรวม ค้นหา และจัดระเบียบหนังสือของคุณไว้ในที่เดียว"
 };
 
 export default function RootLayout({

@@ -74,13 +74,13 @@ export function Login() {
         <section className="grid w-full gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent">
-              Personal Library
+              Personal Book Library
             </p>
             <h1 className="mt-4 text-5xl font-semibold leading-tight md:text-7xl">
-              Book Library
+              คลังหนังสือส่วนตัว
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-neutral-700">
-              เข้าสู่ระบบเพื่อเพิ่ม ลบ และดูคลังหนังสือส่วนตัวของคุณจากฐานข้อมูลจริง
+              เข้าสู่ระบบเพื่อดูแลและจัดระเบียบหนังสือเล่มโปรดของคุณ
             </p>
           </div>
 
